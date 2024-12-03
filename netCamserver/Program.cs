@@ -80,7 +80,7 @@ namespace CameraServer
 
 			if (ws.Start())
 			{
-				//run_ok_message(camIndex);
+				run_ok_message(camIndex);
 
 				if (camera_service.Start())
 				{
