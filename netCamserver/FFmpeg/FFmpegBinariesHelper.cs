@@ -5,6 +5,11 @@ using FFmpeg.AutoGen;
 
 namespace API.Wrapper.FFmpeg
 {
+    public static partial class FFmpeg
+    {
+        public static string input_format_string { get { return RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "dshow" : RuntimeInformation.IsOSPlatform(OSPlatform.Linux) ? "v4l2" : "avfoundation"; } }
+    }
+
     public class FFmpegBinariesHelper
     {
         internal static void RegisterFFmpegBinaries()
@@ -29,21 +34,14 @@ namespace API.Wrapper.FFmpeg
                     current = Directory.GetParent(current)?.FullName;
                 }
             }
-			else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-			{
-				// 공용 라이브러리 기본 경로 지정
-				var defaultLinuxPath = "/usr/lib/aarch64-linux-gnu";
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
+                if (RuntimeInformation.ProcessArchitecture != Architecture.Arm64)
+                    ffmpeg.RootPath = "/lib/x86_64-linux-gnu/";
+                else
+                    ffmpeg.RootPath = "/usr/lib/aarch64-linux-gnu/";
 
-				if (Directory.Exists(defaultLinuxPath))
-				{
-					Console.WriteLine($"Using default Linux FFmpeg path: {defaultLinuxPath}");
-					ffmpeg.RootPath = defaultLinuxPath;
-				}
-				else
-				{
-					throw new DirectoryNotFoundException("FFmpeg libraries not found in the default system library path. Please ensure FFmpeg is installed.");
-				}
-			}
+            }
             else
                 throw new NotSupportedException(); // fell free add support for platform of your choose
         }

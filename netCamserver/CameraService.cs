@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -17,7 +18,7 @@ namespace CameraServer
     {
         private static string CONFIG_PATH = @"Config";
         private static string CONFIG_FILENAME = @"CameraInfo.json";
-        private VideoCaptureFFmpeg video_capture;
+        private VideoCaptureFFmpeg video_capture = null;
         private int camera_index;
         private string camera_name;
         private int camera_width = 0;
@@ -155,10 +156,11 @@ namespace CameraServer
 
         private static string adjust_camera_name(string name)
         {
-            return name.Contains("rtsp") ? name : "@device_pnp_\\\\?\\" + name + "\\global";
-        }
+            return name.Contains("rtsp") ? name :
+				RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "@device_pnp_\\\\?\\" + name + "\\global":name;
+		}
 
-        public void Stop()
+		public void Stop()
         {
             is_active = false;
 
@@ -176,17 +178,17 @@ namespace CameraServer
             CameraConfig config = new CameraConfig();
             config.cameras = new List<CameraItem>();
 
-            foreach(var cam in cameras)
+			foreach (var cam in cameras)
             {
                 CameraItem item = new CameraItem();
                 item.camera_index = config.cameras.Count;
                 item.camera_name = cam.Value.Replace("@device_pnp_\\\\?\\", "").Replace("\\global", "");
-                item.width = 1280;
+				item.width = 1280;
                 item.height = 720;
                 item.rotate = 270;
 
-                Console.WriteLine(string.Format("    ++++++++ camera[{0}]: {1}: {2}", item.camera_index, cam.Key, item.camera_name));
-                config.cameras.Add(item);
+				Console.WriteLine(string.Format("    ++++++++ camera[{0}]: {1}: {2}", item.camera_index, cam.Key, item.camera_name));
+				config.cameras.Add(item);
             }
 
             string config_path = System.IO.Path.Combine(Environment.CurrentDirectory, CONFIG_PATH);

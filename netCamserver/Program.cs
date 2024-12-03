@@ -1,6 +1,5 @@
-﻿using System.Reflection.Emit;
-using System.Reflection;
-using System;
+﻿using System.Reflection;
+using System.Runtime.InteropServices;
 
 namespace CameraServer
 {
@@ -21,6 +20,7 @@ namespace CameraServer
 				else
 				{
 #if !DEBUG
+                    if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                     WindowUtils.HideConsole();
 #endif
 					int camera_index;
@@ -74,12 +74,13 @@ namespace CameraServer
 		private static void run_service(int camIndex)
 		{
 			init_log(camIndex);
+			 
 			CameraService camera_service = new CameraService(camIndex);
 			WebServer ws = new WebServer(camera_service, get_service_port(camIndex));
 
 			if (ws.Start())
 			{
-				run_ok_message(camIndex);
+				//run_ok_message(camIndex);
 
 				if (camera_service.Start())
 				{

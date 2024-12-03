@@ -5,8 +5,8 @@ using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Advanced;
 using System;
 using System.Collections.Generic;
-//using System.Drawing.Imaging;
-//using System.Drawing;
+using System.Drawing.Imaging;
+using System.Drawing;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
@@ -21,20 +21,20 @@ namespace API.Wrapper.FFmpeg
 
     public class VideoCaptureFFmpeg : IDisposable
     {
-        private Thread? grabber_thread = null;
+        private Thread grabber_thread = null;
         private ThreadStart grabber_thread_start;
         private bool active_thread = false;
 
-        private VideoStreamDecoder? ffmpeg_decoder = null;
+        private VideoStreamDecoder ffmpeg_decoder = null;
         private bool is_opened = false;
 
         private object current_frame_lock = new object();
         private object current_bitmap_lock = new object();
-        private Mat? current_frame = null;
+        private Mat current_frame = null;
 		//private Bitmap current_bitmap = null;
 		private Image<Rgb24>? current_bitmap = null;
 
-		public event OnBrokenNotify? OnBrokenNotify = null;
+        public event OnBrokenNotify OnBrokenNotify = null;
 
         public VideoCaptureFFmpeg()
         {
@@ -49,13 +49,11 @@ namespace API.Wrapper.FFmpeg
 
         private unsafe void set_up_logging()
         {
-
-			ffmpeg.av_log_set_level(ffmpeg.AV_LOG_INFO);// (ffmpeg.AV_LOG_ERROR);
+            ffmpeg.av_log_set_level(ffmpeg.AV_LOG_SKIP_REPEATED);// (ffmpeg.AV_LOG_ERROR);
 
 			// do not convert to local function
 			av_log_set_callback_callback logCallback = (p0, level, format, vl) =>
             {
-
 				if (level > ffmpeg.av_log_get_level()) return;
 
                 var lineSize = 1024;
@@ -68,7 +66,6 @@ namespace API.Wrapper.FFmpeg
                 Console.ResetColor();
             };
 
-			Console.Write("\r\n");
 			ffmpeg.av_log_set_callback(logCallback);
         }
 
@@ -208,10 +205,8 @@ namespace API.Wrapper.FFmpeg
                     //else
                     {
                         Console.WriteLine(
-							
-							$"timestamp: {frame.best_effort_timestamp}, decode_error: {frame.decode_error_flags}, flags: {frame.flags}"
+                            $"number: {frame.coded_picture_number}, timestamp: {frame.best_effort_timestamp}, decode_error: {frame.decode_error_flags}, flags: {frame.flags}"
 						);
-						//$"number: {frame.coded_picture_number}, timestamp: {frame.best_effort_timestamp}, decode_error: {frame.decode_error_flags}, flags: {frame.flags}"
 						try
 						{
                             Console.SetCursorPosition(0, Console.CursorTop - 1);

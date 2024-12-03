@@ -101,10 +101,14 @@ namespace API.Wrapper.FFmpeg
 
         private string get_mapped_camera_name(string camera_name)
         {
+#if WINDOWS
             return camera_name.Contains("@device_pnp") ?
                     camera_name :
                     usb_camera_list.TryGetValue(camera_name, out var mapped_camera_name) ?
                         mapped_camera_name : camera_name;
+#else
+            return camera_name;
+#endif
         }
 
         public void Disconnect()
@@ -128,7 +132,7 @@ namespace API.Wrapper.FFmpeg
             var pFormatContext = _pFormatContext;
 
             // for webcam
-            AVInputFormat* iformat = ffmpeg.av_find_input_format("dshow");
+            AVInputFormat* iformat = ffmpeg.av_find_input_format(FFmpeg.input_format_string);
             return ffmpeg.avformat_open_input(&pFormatContext, camera_name, iformat, null);
         }
 
@@ -281,29 +285,54 @@ namespace API.Wrapper.FFmpeg
         {
             usb_camera_list.Clear();
 
-            AVInputFormat* iformat = ffmpeg.av_find_input_format("dshow");
+            AVInputFormat* iformat = ffmpeg.av_find_input_format(FFmpeg.input_format_string);
             AVDeviceInfoList* device_list = null;
             if (ffmpeg.avdevice_list_input_sources(iformat, null, null, &device_list) >= 0)
             {
+                Console.WriteLine("sources: {0}, default: {1}", device_list->nb_devices, device_list->default_device);
+
                 for (int idx = 0; idx < device_list->nb_devices; idx++)
                 {
                     var device_name = Marshal.PtrToStringAnsi((IntPtr)device_list->devices[idx]->device_name);
                     var device_desc = Marshal.PtrToStringAnsi((IntPtr)device_list->devices[idx]->device_description);
-                    AVMediaType device_type = AVMediaType.AVMEDIA_TYPE_UNKNOWN;
-                    for (int i = 0; i < device_list->devices[idx]->nb_media_types; i++)
-                    {
-                        if (device_list->devices[idx]->media_types[i] == AVMediaType.AVMEDIA_TYPE_VIDEO)
-                        {
-                            device_type = AVMediaType.AVMEDIA_TYPE_VIDEO;
-                            break;
-                        }
-                    }
+
+                    Console.WriteLine("name={0}, desc={1}", device_name, device_desc);
+
+                    AVMediaType device_type =
+                        check_device_type(
+                            device_list->devices[idx]->nb_media_types,
+                            device_list->devices[idx]->media_types,
+                            device_name,
+                            device_desc);
 
                     if (device_type == AVMediaType.AVMEDIA_TYPE_VIDEO)
                         add_to_list(device_desc, device_name);
                 }
             }
             ffmpeg.avdevice_free_list_devices(&device_list);
+        }
+
+        private AVMediaType check_device_type(int nb_media_types, AVMediaType* media_types, string? device_name, string? device_desc)
+        {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                    {
+                for (int i = 0; i < nb_media_types; i++)
+                        {
+                    if (media_types[i] == AVMediaType.AVMEDIA_TYPE_VIDEO)
+                        return AVMediaType.AVMEDIA_TYPE_VIDEO;
+                        }
+                    }
+            else
+            {
+                var ret_val = init_usb_web_cam(device_name, AVHWDeviceType.AV_HWDEVICE_TYPE_NONE);
+                var pFormatContext = _pFormatContext;
+                ffmpeg.avformat_close_input(&pFormatContext);
+
+                if (ret_val == 0)
+                    return AVMediaType.AVMEDIA_TYPE_VIDEO;
+                }
+
+            return AVMediaType.AVMEDIA_TYPE_UNKNOWN; ;
         }
 
         private void add_to_list(string device_desc, string device_name)

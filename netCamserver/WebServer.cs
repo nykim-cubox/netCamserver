@@ -1,12 +1,7 @@
 ﻿using Nancy;
 using Nancy.Hosting.Self;
 using OpenCvSharp;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
-using System.Threading.Tasks;
+using System.Runtime.InteropServices;
 
 namespace CameraServer
 {
@@ -15,14 +10,17 @@ namespace CameraServer
         public delegate string service_func(DynamicDictionary query);
 
         public string name;
-        public service_func? service;
+        public service_func service;
     }
 
     public class WebServer
     {
         private const int MAX_WIDTH = 720;
         private const int MAX_HEIGHT = 960;
-        private static string filenameFaceCascade = @"data\haarcascades\haarcascade_frontalface_alt.xml";
+        private static string filenameFaceCascade =
+            RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ?
+                @"data\haarcascades\haarcascade_frontalface_alt.xml" :
+                @"data/haarcascades/haarcascade_frontalface_alt.xml";
         private HostConfiguration host_config;
         private Uri uri;
         private NancyHost host;
@@ -40,7 +38,7 @@ namespace CameraServer
             _camera_service = camera_service;
 
             host_config = new HostConfiguration { UrlReservations = new UrlReservations() { CreateAutomatically = true } };
-            uri = new Uri(string.Format("http://127.0.0.1:{0}", service_port));
+            uri = new Uri(string.Format("http://localhost:{0}", service_port));
 
             WebServiceModule.OnGetRequest += WebServiceModule_OnGetRequest;
         }
@@ -101,7 +99,7 @@ namespace CameraServer
         private static string do_takephoto_service(DynamicDictionary query)
         {
             int rotate = query.ContainsKey("rotate") ? query["rotate"] : 0;
-            Mat? dst = null;
+            Mat dst = null;
 
             using (var frame = _camera_service.GetImage(rotate))
             {

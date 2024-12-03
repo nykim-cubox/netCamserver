@@ -8,13 +8,13 @@ namespace CameraServer.model
 {
     public class CameraConfig
     {
-        public List<CameraItem>? cameras;
+        public List<CameraItem> cameras;
     }
 
     public class CameraItem
     {
         public int camera_index;
-        public string? camera_name;
+        public string camera_name;
         public int width;
         public int height;
         public int rotate;
