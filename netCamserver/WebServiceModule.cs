@@ -14,7 +14,7 @@ namespace CameraServer
     {
         public static event OnGetRequestEvent OnGetRequest = null;
 
-        /*public WebServiceModule()
+        public WebServiceModule()
         {
             Get("/{path}", args => {
                 var contents = get_service(args.path, this.Request.Query);
@@ -43,6 +43,6 @@ namespace CameraServer
                 return OnGetRequest(path, query);
 
             return string.Format("PAGE-NOT-FOUND: {0}", path);
-        }*/
+        }
     }
 }

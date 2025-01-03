@@ -2,7 +2,7 @@
   "profiles": {
     "netCamserver": {
       "commandName": "Project",
-      "commandLineArgs": "\"0\""
+      "commandLineArgs": "\"rtsp:343434\""
     }
   }
 }
