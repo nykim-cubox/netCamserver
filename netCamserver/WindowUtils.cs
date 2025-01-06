@@ -10,6 +10,7 @@ namespace CameraServer
 {
     public class WindowUtils
     {
+#if WINDOWS
         [DllImport("kernel32.dll", SetLastError = true)]
         private static extern IntPtr GetStdHandle(int nStdHandle);
 
@@ -27,6 +28,7 @@ namespace CameraServer
         private static extern bool ShowWindow([In] IntPtr windowHandle, [In] int showCommand);
 
         private const int SW_MINIMIZE = 6;
+#endif
 
         public static CancellationTokenSource cts = new CancellationTokenSource();
 
@@ -34,6 +36,7 @@ namespace CameraServer
 
         public static void HideConsole()
         {
+#if WINDOWS
             IntPtr consoleHandle = GetStdHandle(-10); //STD_INPUT_HANDLE
             UInt32 consoleMode;
             GetConsoleMode(consoleHandle, out consoleMode);
@@ -42,6 +45,7 @@ namespace CameraServer
 
             IntPtr consoleWindowHandle = GetConsoleWindow();
             ShowWindow(consoleWindowHandle, SW_MINIMIZE);
+#endif
         }
 
         public static void SetCancelOnConsole()

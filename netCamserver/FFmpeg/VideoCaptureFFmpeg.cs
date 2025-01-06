@@ -1,8 +1,8 @@
 ﻿using FFmpeg.AutoGen;
 using OpenCvSharp;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.PixelFormats;
-using SixLabors.ImageSharp.Advanced;
+//using SixLabors.ImageSharp;
+//using SixLabors.ImageSharp.PixelFormats;
+//using SixLabors.ImageSharp.Advanced;
 using System;
 using System.Collections.Generic;
 using System.Drawing.Imaging;
@@ -13,7 +13,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Drawing;
+//using System.Drawing;
 
 namespace API.Wrapper.FFmpeg
 {
@@ -29,10 +29,12 @@ namespace API.Wrapper.FFmpeg
         private bool is_opened = false;
 
         private object current_frame_lock = new object();
-        private object current_bitmap_lock = new object();
         private Mat current_frame = null;
-		//private Bitmap current_bitmap = null;
-		private Image<Rgb24>? current_bitmap = null;
+#if (TARGET_AMD64 || TARGET_X86)
+		private object current_bitmap_lock = new object();
+		private Bitmap current_bitmap = null;
+        //private Image<Rgb24>? current_bitmap = null;//sixlabors 비트맵을 이거로 바껐었는데 그냥 주석처리하면 됨
+#endif
 
         public event OnBrokenNotify OnBrokenNotify = null;
 
@@ -138,19 +140,24 @@ namespace API.Wrapper.FFmpeg
                     current_frame.Dispose();
                 current_frame = null;
             }
-
+#if (TARGET_AMD64 || TARGET_X86)
             lock (current_frame_lock)
             {
-				//                if (current_bitmap != null)
-				//                    current_bitmap.Dispose();
-				//                current_bitmap = null;
 				if (current_bitmap != null)
-					current_bitmap.Dispose();
+				current_bitmap.Dispose();
 				current_bitmap = null;
 			}
+            //sixlabors 
+            //lock (current_frame_lock)
+            //{
+			//	if (current_bitmap != null)
+			//		current_bitmap.Dispose();
+			//	current_bitmap = null;
+			//}
+#endif
 		}
 
-        private bool wait_for_first_frame()
+		private bool wait_for_first_frame()
         {
             lock (current_frame_lock)
             {
@@ -246,7 +253,24 @@ namespace API.Wrapper.FFmpeg
 
 		private unsafe void update_current_frame(AVFrame frame)
 		{
-			lock (current_bitmap_lock)
+#if (TARGET_AMD64 || TARGET_X86)
+            lock (current_bitmap_lock)
+            {
+                if (current_bitmap != null)
+                    current_bitmap.Dispose();
+
+                current_bitmap = new Bitmap
+                                    (
+                                        frame.width,
+                                        frame.height,
+                                        frame.linesize[0],
+                                        PixelFormat.Format24bppRgb,
+                                        (IntPtr)frame.data[0]
+                                    );
+            }
+#endif
+			/*sixlabors 
+			 * lock (current_bitmap_lock)
 			{
 				if (current_bitmap != null)
 					current_bitmap.Dispose();
@@ -309,7 +333,7 @@ namespace API.Wrapper.FFmpeg
 						return;
 					}
 				}
-			}
+			}*/
 		}
 		private static AVPixelFormat get_hw_pixel_format(AVHWDeviceType hWDevice)
         {
@@ -333,7 +357,32 @@ namespace API.Wrapper.FFmpeg
             return ret_val;
         }
 
-        public bool Read(Mat frame)
+		public bool Read(Mat frame)
+		{
+			bool ret = true;
+
+			lock (current_frame_lock)
+			{
+				if (current_frame == null)
+					ret = false;
+				else
+					current_frame.CopyTo(frame);
+			}
+
+			return ret;
+		}
+
+#if (TARGET_AMD64 || TARGET_X86)
+        public Bitmap Read()
+        {
+            lock (current_bitmap_lock)
+            {
+                return new Bitmap(current_bitmap);
+            }
+        }
+#endif
+		/*//sixlabors 
+         * public bool Read(Mat frame)
         {
             bool ret = true;
 
@@ -346,9 +395,9 @@ namespace API.Wrapper.FFmpeg
             }
 
             return ret;
-        }
+        }*/
 
-        public void Release()
+		public void Release()
         {
             Dispose();
         }
