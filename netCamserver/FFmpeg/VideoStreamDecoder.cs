@@ -132,8 +132,8 @@ namespace API.Wrapper.FFmpeg
             var pFormatContext = _pFormatContext;
 
             // for webcam
-            AVInputFormat* iformat = ffmpeg.av_find_input_format(FFmpeg.input_format_string);
-            return ffmpeg.avformat_open_input(&pFormatContext, camera_name, iformat, null);
+            AVInputFormat* iformat = ffmpeg.av_find_input_format(FFmpeg.input_format_string);//v4l2 dsshow
+            return ffmpeg.avformat_open_input(&pFormatContext, camera_name, iformat, null);//camera open
         }
 
         private int init_network_cam(string camera_name, AVHWDeviceType HWDeviceType)
@@ -309,19 +309,24 @@ namespace API.Wrapper.FFmpeg
                         add_to_list(device_desc, device_name);
                 }
             }
-            ffmpeg.avdevice_free_list_devices(&device_list);
+			else
+			{
+				Console.WriteLine("Failed to list input sources.");
+				return;
+			}
+			ffmpeg.avdevice_free_list_devices(&device_list);
         }
 
         private AVMediaType check_device_type(int nb_media_types, AVMediaType* media_types, string? device_name, string? device_desc)
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                    {
+            {
                 for (int i = 0; i < nb_media_types; i++)
-                        {
-                    if (media_types[i] == AVMediaType.AVMEDIA_TYPE_VIDEO)
-                        return AVMediaType.AVMEDIA_TYPE_VIDEO;
-                        }
-                    }
+                {
+                    if (media_types[i] == AVMediaType.AVMEDIA_TYPE_VIDEO)//이름이 VIDEO 이면 타입리턴
+                        return AVMediaType.AVMEDIA_TYPE_VIDEO;//이름이 VIDEO 이면 타입리턴
+				}
+            }
             else
             {
                 var ret_val = init_usb_web_cam(device_name, AVHWDeviceType.AV_HWDEVICE_TYPE_NONE);
@@ -329,8 +334,8 @@ namespace API.Wrapper.FFmpeg
                 ffmpeg.avformat_close_input(&pFormatContext);
 
                 if (ret_val == 0)
-                    return AVMediaType.AVMEDIA_TYPE_VIDEO;
-                }
+                    return AVMediaType.AVMEDIA_TYPE_VIDEO;//USB 초기화 시도해보고 열리면 VIDEO 타입리턴
+			}
 
             return AVMediaType.AVMEDIA_TYPE_UNKNOWN; ;
         }

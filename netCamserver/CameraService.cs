@@ -11,6 +11,7 @@ using CameraServer.model;
 using FFmpeg.AutoGen;
 using Newtonsoft.Json;
 using OpenCvSharp;
+using System.Text.RegularExpressions;
 
 namespace CameraServer
 {
@@ -54,8 +55,9 @@ namespace CameraServer
             if (config == null)
                 return String.Empty;
 
-            var camera_item = config.cameras.ElementAt(camIndex);
-            camera_width = camera_item.width;
+            //var camera_item = config.cameras.ElementAt(camIndex);
+			var camera_item = config.cameras.FirstOrDefault(c => c.camera_index == camIndex);
+			camera_width = camera_item.width;
             camera_height = camera_item.height;
             camera_rotate = camera_item.rotate;
             camera_flip = camera_item.flip;
@@ -171,8 +173,9 @@ namespace CameraServer
         {
             var video_capture = new VideoCaptureFFmpeg();
             var cameras = video_capture.GetUSBCameraList();
+			int nextIndex = 2; // 나머지 카메라의 시작 index
 
-            Console.WriteLine("-------------------------------------------------------------");
+			Console.WriteLine("-------------------------------------------------------------");
             Console.WriteLine("  >>>>> make config file for cameras information on system.");
 
             CameraConfig config = new CameraConfig();
@@ -182,10 +185,26 @@ namespace CameraServer
             {
                 CameraItem item = new CameraItem();
                 item.camera_index = config.cameras.Count;
-                item.camera_name = cam.Value.Replace("@device_pnp_\\\\?\\", "").Replace("\\global", "");
+                item.camera_name = cam.Value
+                    .Replace("@device_pnp_\\\\?\\", "")
+                    .Replace("\\global", "");
 				item.width = 1280;
                 item.height = 720;
                 item.rotate = 270;
+
+				if (cam.Key.Contains("USB Camera0"))//(item.camera_name.Contains("vid_32e4") && item.camera_name.Contains("pid_9101"))//rgb
+				{
+					item.camera_index = 0;
+				}
+				else if (cam.Key.Contains("USB Camera1")) //(item.camera_name.Contains("vid_32e4") && item.camera_name.Contains("pid_9102"))//ir
+				{
+					item.camera_index = 1;
+				}
+				else
+				{
+					item.camera_index = nextIndex;
+					nextIndex++;
+				}
 
 				Console.WriteLine(string.Format("    ++++++++ camera[{0}]: {1}: {2}", item.camera_index, cam.Key, item.camera_name));
 				config.cameras.Add(item);
