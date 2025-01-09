@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="kor">
+<title>
+CameraServer Test
+</title>
+<body>
+	<label>IP</label>
+	<input type="text" id="ip" />
+	<label>Port</label>
+	<input type="text" id="port" />
+	<label>Rotate</label>
+	<input type="text" id="rotate" />
+	<button id="camera">Get Image</button>
+	<button id="takephoto">Take Photo</button>
+	<button id="preview">Preview</button>
+	</br>
+	<img id="result_image" />
+
+	<script>
+		function draw(base64) {
+			console.log(base64);
+			
+			let result = document.querySelector("#result_image");
+			result.src = "data:image/jpg;base64,"+base64;
+		}
+		
+		function camera() {
+			const Http = new XMLHttpRequest();
+			let ip = document.querySelector("#ip").value;
+			let port = document.querySelector("#port").value;
+			let rotate = document.querySelector("#rotate").value;
+			
+			let url = "http://"+ip+":"+port+"/camera";
+			if (rotate)
+			  url = url+"?rotate="+rotate;
+
+			Http.open('GET', url);
+			Http.send(null);
+
+			Http.onreadystatechange = function () {
+				if (this.readyState == 4 && this.status == 200) {
+					draw(this.responseText);
+				}
+			};
+		}
+		
+		function takephoto() {
+			const Http = new XMLHttpRequest();
+            let ip = document.querySelector("#ip").value;
+			let port = document.querySelector("#port").value;
+			let rotate = document.querySelector("#rotate").value;
+
+            let url = "http://" + ip + ":" + port +"/takephoto";
+			if (rotate)
+			  url = url+"?rotate="+rotate;
+
+			Http.open('GET', url);
+			Http.send();
+
+			Http.onreadystatechange = function () {
+				if (this.readyState == 4 && this.status == 200) {
+					draw(this.responseText);
+				}
+			};
+		};
+		
+		function sleep(msec) {
+			return new Promise(resolve => setTimeout(resolve, msec));
+		}
+		
+		var is_preview = false;
+		var is_draw = true;
+		function preview() {
+			if(!is_preview)
+			{
+				const Http = new XMLHttpRequest();
+                let ip = document.querySelector("#ip").value;
+				let port = document.querySelector("#port").value;
+				let rotate = document.querySelector("#rotate").value;
+				
+                let url = "http://" + ip + ":" + port +"/camera";
+				if (rotate)
+				  url = url+"?rotate="+rotate;
+				  
+				Http.onreadystatechange = function () {
+					if (this.readyState == 4 && this.status == 200) {
+						draw(this.responseText);
+						is_draw = true;
+					}
+				};
+
+				is_preview= true;
+				document.querySelector("#preview").innerHTML = "stop-preview";
+				(async () => {
+					do {
+						if(is_draw) {
+							is_draw = false;
+							Http.open('GET', url);
+							Http.send(null);
+						}
+						
+						await sleep(1);
+					}
+					while( is_preview );
+				})();
+			}
+			else
+			{
+				is_preview = false;
+				is_draw = true;
+				document.querySelector("#preview").innerHTML = "preview";
+			}
+		}
+		
+		document.querySelector("#camera").addEventListener("click", camera);
+		document.querySelector("#takephoto").addEventListener("click", takephoto);
+		document.querySelector("#preview").addEventListener("click", preview);
+	</script>
+
+</body>
+</html>
