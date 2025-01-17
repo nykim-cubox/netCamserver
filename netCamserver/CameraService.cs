@@ -54,10 +54,12 @@ namespace CameraServer
 
             if (config == null)
                 return String.Empty;
-
-            //var camera_item = config.cameras.ElementAt(camIndex);
-			var camera_item = config.cameras.FirstOrDefault(c => c.camera_index == camIndex);
-			camera_width = camera_item.width;
+#if IndexName
+            var camera_item = config.cameras.FirstOrDefault(c => c.camera_index == camIndex);//이름순
+#else
+			var camera_item = config.cameras.ElementAt(camIndex);//하드웨어순
+#endif
+            camera_width = camera_item.width;
             camera_height = camera_item.height;
             camera_rotate = camera_item.rotate;
             camera_flip = camera_item.flip;
@@ -190,9 +192,10 @@ namespace CameraServer
                     .Replace("\\global", "");
 				item.width = 1280;
                 item.height = 720;
-                item.rotate = 270;
+                item.rotate = 0;
 
-				if (cam.Key.Contains("USB Camera0"))//(item.camera_name.Contains("vid_32e4") && item.camera_name.Contains("pid_9101"))//rgb
+#if IndexName
+                if (cam.Key.Contains("USB Camera0"))//(item.camera_name.Contains("vid_32e4") && item.camera_name.Contains("pid_9101"))//rgb
 				{
 					item.camera_index = 0;
 				}
@@ -205,6 +208,7 @@ namespace CameraServer
 					item.camera_index = nextIndex;
 					nextIndex++;
 				}
+#endif
 
 				Console.WriteLine(string.Format("    ++++++++ camera[{0}]: {1}: {2}", item.camera_index, cam.Key, item.camera_name));
 				config.cameras.Add(item);

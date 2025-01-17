@@ -38,6 +38,7 @@ namespace CameraServer
             _camera_service = camera_service;
 
             host_config = new HostConfiguration { UrlReservations = new UrlReservations() { CreateAutomatically = true } };
+            host_config.MaximumConnectionCount = 5;
             uri = new Uri(string.Format("http://localhost:{0}", service_port));
 
             WebServiceModule.OnGetRequest += WebServiceModule_OnGetRequest;
