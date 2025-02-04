@@ -1,9 +1,5 @@
 ﻿using System.Reflection;
 using System.Runtime.InteropServices;
-//테스트
-//branch_test
-//추가2
-//추가3
 namespace CameraServer
 {
 
@@ -41,7 +37,6 @@ namespace CameraServer
 			Console.ReadKey(false);
 #endif
 		}
-		//브렌치 테스트 추가
 		private static void init()
 		{
 			string version = Assembly.GetExecutingAssembly().GetName().Version.ToString();
@@ -54,7 +49,6 @@ namespace CameraServer
 
 			WindowUtils.SetCancelOnConsole();
 		}
-		//브렌치 추가3
 		private static void make_camera_info_json()
 		{
 			CameraService.CreateCameraInfo();
@@ -64,7 +58,6 @@ namespace CameraServer
 		{
 			CameraService.MakeSampleImageAllDevices();
 		}
-		//브렌치 추가4
 		private static void usage()
 		{
 			Console.WriteLine("usage: CameraServer {device_index}");
