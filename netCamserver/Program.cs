@@ -41,7 +41,7 @@ namespace CameraServer
 			Console.ReadKey(false);
 #endif
 		}
-
+		//브렌치 테스트 추가
 		private static void init()
 		{
 			string version = Assembly.GetExecutingAssembly().GetName().Version.ToString();
