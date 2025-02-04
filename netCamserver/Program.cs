@@ -54,7 +54,7 @@ namespace CameraServer
 
 			WindowUtils.SetCancelOnConsole();
 		}
-
+		//브렌치 추가3
 		private static void make_camera_info_json()
 		{
 			CameraService.CreateCameraInfo();
