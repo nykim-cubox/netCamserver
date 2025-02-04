@@ -31,13 +31,11 @@ namespace CameraServer
 					}
 				}
 			}
-			//기능추가2
 #if DEBUG
 			Console.WriteLine("Press Any Key to quit                                           ");
 			Console.ReadKey(false);
 #endif
 		}
-		//기능추가3
 		private static void init()
 		{
 			string version = Assembly.GetExecutingAssembly().GetName().Version.ToString();
