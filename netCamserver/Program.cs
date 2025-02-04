@@ -2,7 +2,6 @@
 using System.Runtime.InteropServices;
 namespace CameraServer
 {
-	//기능추가1
 	class Program
 	{
 		static void Main(string[] args)
@@ -48,7 +47,6 @@ namespace CameraServer
 
 			WindowUtils.SetCancelOnConsole();
 		}
-		//기능추가4
 		private static void make_camera_info_json()
 		{
 			CameraService.CreateCameraInfo();
