@@ -37,6 +37,7 @@ namespace CameraServer
 			Console.ReadKey(false);
 #endif
 		}
+		//기능추가3
 		private static void init()
 		{
 			string version = Assembly.GetExecutingAssembly().GetName().Version.ToString();
@@ -49,6 +50,7 @@ namespace CameraServer
 
 			WindowUtils.SetCancelOnConsole();
 		}
+		//기능추가4
 		private static void make_camera_info_json()
 		{
 			CameraService.CreateCameraInfo();
