@@ -2,7 +2,7 @@
 using System.Runtime.InteropServices;
 namespace CameraServer
 {
-
+	//기능추가1
 	class Program
 	{
 		static void Main(string[] args)
@@ -31,7 +31,7 @@ namespace CameraServer
 					}
 				}
 			}
-
+			//기능추가2
 #if DEBUG
 			Console.WriteLine("Press Any Key to quit                                           ");
 			Console.ReadKey(false);
