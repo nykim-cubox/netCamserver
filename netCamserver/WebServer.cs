@@ -128,15 +128,13 @@ namespace CameraServer
                         else
                             w = h * 0.75;
 
-                        int cx = faces[idx].X + faces[idx].Width / 2;
-                        int cy = faces[idx].Y + faces[idx].Height / 2;
-                        int x = cx - (int)(w / 2);
-                        int y = cy - (int)(h / 2);
-
                         if (w > 0 && h > 0)
                         {
-                            int dx = (x + (int)w) > frame.Width ? (x + (int)w) - frame.Width : 0;
-                            int dy = (y + (int)h) > frame.Height ? (y + (int)h) - frame.Height : 0;
+                            int x = (faces[idx].X + faces[idx].Width / 2) - (int)(w / 2);
+                            int y = (faces[idx].Y + faces[idx].Height / 2) - (int)(h / 2);
+
+                            int dx = x < 0 ? x : ((x + (int)w) > frame.Width ? (x + (int)w) - frame.Width : 0);
+                            int dy = y < 0 ? y : ((y + (int)h) > frame.Height ? (y + (int)h) - frame.Height : 0);
 
                             dst = frame[new Rect(x-dx, y-dy, (int)(w)-dx, (int)(h)-dy)];
                         }
