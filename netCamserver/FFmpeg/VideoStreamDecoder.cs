@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using OpenCvSharp;
 using FFmpeg.AutoGen;
-using System.Linq;
-//using System.Runtime.Remoting.Messaging;
 
 namespace API.Wrapper.FFmpeg
 {
@@ -22,6 +20,14 @@ namespace API.Wrapper.FFmpeg
         private Size _resolution;
         private AVPixelFormat _pixel_format;
         private Dictionary<string, string> usb_camera_list = new Dictionary<string, string>();
+
+        public int Width { get { return _frame_size.Width; } }
+        public int Height { get { return _frame_size.Height; } }
+        public string CodecName { get { return _codec_name; } }
+        public Size FrameSize { get { return _frame_size; } }
+        public Size Resolution { get { return _resolution; } }
+        public AVPixelFormat PixelFormat { get { return _pixel_format; } }
+        public bool IsOpened { get { return is_opened; } }
 
         public VideoStreamDecoder()
         {
@@ -56,7 +62,6 @@ namespace API.Wrapper.FFmpeg
             if (ret_val < 0)
             {
                 Dispose();
-                
                 return false;
             }
 
@@ -101,14 +106,13 @@ namespace API.Wrapper.FFmpeg
 
         private string get_mapped_camera_name(string camera_name)
         {
-#if WINDOWS
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             return camera_name.Contains("@device_pnp") ?
                     camera_name :
                     usb_camera_list.TryGetValue(camera_name, out var mapped_camera_name) ?
                         mapped_camera_name : camera_name;
-#else
+            else
             return camera_name;
-#endif
         }
 
         public void Disconnect()
@@ -132,13 +136,14 @@ namespace API.Wrapper.FFmpeg
             var pFormatContext = _pFormatContext;
 
             // for webcam
-            AVInputFormat* iformat = ffmpeg.av_find_input_format(FFmpeg.input_format_string);//v4l2 dsshow
-            return ffmpeg.avformat_open_input(&pFormatContext, camera_name, iformat, null);//camera open
+            AVInputFormat* iformat = ffmpeg.av_find_input_format(FFmpeg.input_format_string);
+            return ffmpeg.avformat_open_input(&pFormatContext, camera_name, iformat, null);
         }
 
         private int init_network_cam(string camera_name, AVHWDeviceType HWDeviceType)
         {
-            AVDictionary* opts;
+            AVDictionary* opts = null;
+
             ffmpeg.av_dict_set(&opts, "probesize", "4096", 0);
             ffmpeg.av_dict_set(&opts, "max_probe_packets", "64", 0);
             ffmpeg.av_dict_set(&opts, "rtsp_transport", "tcp", 0);
@@ -154,14 +159,6 @@ namespace API.Wrapper.FFmpeg
             return ffmpeg.avformat_open_input(&pFormatContext, camera_name, null, &opts).ThrowExceptionIfError();
         }
 
-        public string CodecName { get { return _codec_name; } }
-        public Size FrameSize { get { return _frame_size; } }
-        public Size Resolution { get { return _resolution; } }
-        public AVPixelFormat PixelFormat { get { return _pixel_format; } }
-        public bool IsOpened()
-        {
-            return is_opened;
-        }
         public void Dispose()
         {
             if (_pFrame != null)
@@ -289,14 +286,10 @@ namespace API.Wrapper.FFmpeg
             AVDeviceInfoList* device_list = null;
             if (ffmpeg.avdevice_list_input_sources(iformat, null, null, &device_list) >= 0)
             {
-                Console.WriteLine("sources: {0}, default: {1}", device_list->nb_devices, device_list->default_device);
-
                 for (int idx = 0; idx < device_list->nb_devices; idx++)
                 {
                     var device_name = Marshal.PtrToStringAnsi((IntPtr)device_list->devices[idx]->device_name);
                     var device_desc = Marshal.PtrToStringAnsi((IntPtr)device_list->devices[idx]->device_description);
-
-                    Console.WriteLine("name={0}, desc={1}", device_name, device_desc);
 
                     AVMediaType device_type =
                         check_device_type(
@@ -323,8 +316,8 @@ namespace API.Wrapper.FFmpeg
             {
                 for (int i = 0; i < nb_media_types; i++)
                 {
-                    if (media_types[i] == AVMediaType.AVMEDIA_TYPE_VIDEO)//이름이 VIDEO 이면 타입리턴
-                        return AVMediaType.AVMEDIA_TYPE_VIDEO;//이름이 VIDEO 이면 타입리턴
+                    if (media_types[i] == AVMediaType.AVMEDIA_TYPE_VIDEO)
+                        return AVMediaType.AVMEDIA_TYPE_VIDEO;
 				}
             }
             else
@@ -334,7 +327,7 @@ namespace API.Wrapper.FFmpeg
                 ffmpeg.avformat_close_input(&pFormatContext);
 
                 if (ret_val == 0)
-                    return AVMediaType.AVMEDIA_TYPE_VIDEO;//USB 초기화 시도해보고 열리면 VIDEO 타입리턴
+                    return AVMediaType.AVMEDIA_TYPE_VIDEO;
 			}
 
             return AVMediaType.AVMEDIA_TYPE_UNKNOWN; ;

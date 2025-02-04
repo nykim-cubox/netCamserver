@@ -1,19 +1,15 @@
 ﻿using FFmpeg.AutoGen;
 using OpenCvSharp;
-//using SixLabors.ImageSharp;
-//using SixLabors.ImageSharp.PixelFormats;
-//using SixLabors.ImageSharp.Advanced;
 using System;
 using System.Collections.Generic;
-using System.Drawing.Imaging;
-using System.Drawing;
 using System.Linq;
 using System.Runtime.InteropServices;
-using System.Runtime.CompilerServices;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-//using System.Drawing;
+#if (TARGET_AMD64 || TARGET_X86)
+    using System.Drawing;
+    using System.Drawing.Imaging;
+#endif
 
 namespace API.Wrapper.FFmpeg
 {
@@ -33,10 +29,11 @@ namespace API.Wrapper.FFmpeg
 #if (TARGET_AMD64 || TARGET_X86)
 		private object current_bitmap_lock = new object();
 		private Bitmap current_bitmap = null;
-        //private Image<Rgb24>? current_bitmap = null;//sixlabors 비트맵을 이거로 바껐었는데 그냥 주석처리하면 됨
 #endif
 
         public event OnBrokenNotify OnBrokenNotify = null;
+        public int FrameWidth { get { return ffmpeg_decoder.Width; } }
+        public int FrameHeight { get { return ffmpeg_decoder.Height; } }
 
         public VideoCaptureFFmpeg()
         {
@@ -51,7 +48,7 @@ namespace API.Wrapper.FFmpeg
 
         private unsafe void set_up_logging()
         {
-            ffmpeg.av_log_set_level(ffmpeg.AV_LOG_SKIP_REPEATED);// (ffmpeg.AV_LOG_ERROR);
+            ffmpeg.av_log_set_level(ffmpeg.AV_LOG_TRACE);// (ffmpeg.AV_LOG_SKIP_REPEATED);// (ffmpeg.AV_LOG_ERROR);
 
 			// do not convert to local function
 			av_log_set_callback_callback logCallback = (p0, level, format, vl) =>
@@ -147,13 +144,6 @@ namespace API.Wrapper.FFmpeg
 				current_bitmap.Dispose();
 				current_bitmap = null;
 			}
-            //sixlabors 
-            //lock (current_frame_lock)
-            //{
-			//	if (current_bitmap != null)
-			//		current_bitmap.Dispose();
-			//	current_bitmap = null;
-			//}
 #endif
 		}
 
@@ -190,6 +180,7 @@ namespace API.Wrapper.FFmpeg
             {
                 if (ffmpeg_decoder.TryDecodeNextFrame(out var frame))
                 {
+                    // noize reduction
                     if (frame.decode_error_flags != 0 && frame.flags == 2)
                         valid_frame = false;
                     else
@@ -269,72 +260,8 @@ namespace API.Wrapper.FFmpeg
                                     );
             }
 #endif
-			/*sixlabors 
-			 * lock (current_bitmap_lock)
-			{
-				if (current_bitmap != null)
-					current_bitmap.Dispose();
-
-				int width = frame.width;
-				int height = frame.height;
-				int stride = frame.linesize[0];
-				byte* dataPtr = (byte*)frame.data[0];
-
-				// 유효성 검사
-				if (width <= 0 || height <= 0)
-				{
-					Console.WriteLine("유효하지 않은 이미지 크기입니다.");
-					return;
 				}
 
-				if (dataPtr == null)
-				{
-					Console.WriteLine("dataPtr이 null입니다.");
-					return;
-				}
-
-				try
-				{
-					current_bitmap = new Image<Rgb24>(width, height);
-				}
-				catch (Exception ex)
-				{
-					Console.WriteLine($"이미지 생성 중 예외 발생: {ex.Message}");
-					return;
-				}
-
-				int bytesPerPixel = Unsafe.SizeOf<Rgb24>(); // 3
-
-				for (int y = 0; y < height; y++)
-				{
-					Span<Rgb24> pixelRowSpan;
-					try
-					{
-						pixelRowSpan = current_bitmap.DangerousGetPixelRowMemory(y).Span;
-					}
-					catch (Exception ex)
-					{
-						Console.WriteLine($"GetPixelRowSpan 중 예외 발생: {ex.Message}");
-						return;
-					}
-
-					byte* srcRowPtr = dataPtr + y * stride;
-
-					try
-					{
-						fixed (Rgb24* destRowPtr = pixelRowSpan)
-						{
-							Buffer.MemoryCopy(srcRowPtr, destRowPtr, width * bytesPerPixel, width * bytesPerPixel);
-						}
-					}
-					catch (Exception ex)
-					{
-						Console.WriteLine($"메모리 복사 중 예외 발생: {ex.Message}");
-						return;
-					}
-				}
-			}*/
-		}
 		private static AVPixelFormat get_hw_pixel_format(AVHWDeviceType hWDevice)
         {
             AVPixelFormat ret_val = AVPixelFormat.AV_PIX_FMT_NONE;
@@ -381,21 +308,6 @@ namespace API.Wrapper.FFmpeg
             }
         }
 #endif
-		/*//sixlabors 
-         * public bool Read(Mat frame)
-        {
-            bool ret = true;
-
-            lock (current_frame_lock)
-            {
-                if (current_frame == null)
-                    ret = false;
-                else
-                    current_frame.CopyTo(frame);
-            }
-
-            return ret;
-        }*/
 
 		public void Release()
         {
@@ -415,11 +327,4 @@ namespace API.Wrapper.FFmpeg
             ffmpeg_decoder.SetResolution(width, height);
         }
     }
-	// 프레임 데이터 구조
-	class FrameData
-	{
-		public int Width { get; set; }          // 이미지 너비
-		public int Height { get; set; }         // 이미지 높이
-		public byte[] Data { get; set; }        // 픽셀 데이터 (RGB 순서)
-	}
 }

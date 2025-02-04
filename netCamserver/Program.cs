@@ -26,11 +26,6 @@ namespace CameraServer
 					int camera_index;
 					if (Int32.TryParse(args[0], out camera_index))
 						run_service(camera_index);
-					else if (args[0].StartsWith("rtsp:", StringComparison.OrdinalIgnoreCase))
-					{
-						// rtsp:로 시작하면 RTSP 서비스 처리
-						Console.WriteLine("rtsp");
-					}
 					else
 					{
 						usage();
@@ -86,7 +81,9 @@ namespace CameraServer
 			if (ws.Start())
 			{
 				run_ok_message(camIndex);
-
+#if TEST
+                WindowUtils.WaitConsoleApplication();
+#else
 				if (camera_service.Start())
 				{
 					WindowUtils.WaitConsoleApplication();
@@ -95,6 +92,7 @@ namespace CameraServer
 				}
 				else
 					LogControl.WriteLog(LogLevel.Error, string.Format("[ERROR] CAMERA NOT FOUND: camera_index={0}", camIndex));
+#endif
 
 				ws.Stop();
 			}

@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -11,7 +10,7 @@ using CameraServer.model;
 using FFmpeg.AutoGen;
 using Newtonsoft.Json;
 using OpenCvSharp;
-using System.Text.RegularExpressions;
+using System.Runtime.InteropServices;
 
 namespace CameraServer
 {
@@ -33,9 +32,10 @@ namespace CameraServer
         {
             camera_index = camIndex;
             camera_name = get_camera_name_from_config(camIndex);
-
+#if !TEST
             video_capture = new VideoCaptureFFmpeg();
             video_capture.OnBrokenNotify += Video_capture_OnBrokenNotify;
+#endif
         }
 
         private void Video_capture_OnBrokenNotify()
@@ -161,7 +161,8 @@ namespace CameraServer
         private static string adjust_camera_name(string name)
         {
             return name.Contains("rtsp") ? name :
-				RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "@device_pnp_\\\\?\\" + name + "\\global":name;
+				RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "@device_pnp_\\\\?\\" + name + "\\global":
+                                                                       name;
 		}
 
 		public void Stop()
@@ -187,9 +188,7 @@ namespace CameraServer
             {
                 CameraItem item = new CameraItem();
                 item.camera_index = config.cameras.Count;
-                item.camera_name = cam.Value
-                    .Replace("@device_pnp_\\\\?\\", "")
-                    .Replace("\\global", "");
+                item.camera_name = cam.Value.Replace("@device_pnp_\\\\?\\", "").Replace("\\global", "");
 				item.width = 1280;
                 item.height = 720;
                 item.rotate = 0;

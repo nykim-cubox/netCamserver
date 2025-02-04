@@ -7,9 +7,7 @@ namespace API.Wrapper.FFmpeg
 {
     public static partial class FFmpeg
     {
-        public static string input_format_string { get { return RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "dshow" 
-                                                                    : RuntimeInformation.IsOSPlatform(OSPlatform.Linux) ? "v4l2"
-                                                                    : "avfoundation"; } }
+        public static string input_format_string { get { return RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "dshow" : RuntimeInformation.IsOSPlatform(OSPlatform.Linux) ? "v4l2" : "avfoundation"; } }
     }
 
     public class FFmpegBinariesHelper

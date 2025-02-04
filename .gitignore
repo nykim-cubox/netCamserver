@@ -366,3 +366,5 @@ AlcheraWrapper/models/**
 FaceRecognitionServer/FaceRecognitionServer/models/**
 CameraServer/CameraServer/models/**
 CameraServer/CameraServer/lib/*.dll
+
+*.bak

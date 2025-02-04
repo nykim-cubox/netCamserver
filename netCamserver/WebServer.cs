@@ -25,7 +25,9 @@ namespace CameraServer
         private Uri uri;
         private NancyHost host;
         private static CameraService _camera_service;
+#if !TEST
         private static CascadeClassifier _faceCascade = new CascadeClassifier(filenameFaceCascade);
+#endif
         private Dictionary<string, SupportedService> supported_services = new Dictionary<string, SupportedService>()
         {
             { "status", new SupportedService() { name = "status", service = do_status } },
@@ -35,7 +37,9 @@ namespace CameraServer
 
         public WebServer(CameraService camera_service, int service_port)
         {
+#if !TEST
             _camera_service = camera_service;
+#endif
 
             host_config = new HostConfiguration { UrlReservations = new UrlReservations() { CreateAutomatically = true } };
             host_config.MaximumConnectionCount = 5;
@@ -66,7 +70,11 @@ namespace CameraServer
             var ret =
                 string.Format(
                     @"{{""status"":{0}}}",
+#if !TEST
                     _camera_service.is_active ? "true" : "false"
+#else
+                    "true"
+#endif
                 );
 
             return ret;
