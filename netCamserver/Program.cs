@@ -2,7 +2,7 @@
 using System.Runtime.InteropServices;
 namespace CameraServer
 {
-
+	//기능추가1
 	class Program
 	{
 		static void Main(string[] args)
