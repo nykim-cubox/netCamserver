@@ -2,7 +2,7 @@
 using System.Runtime.InteropServices;
 namespace CameraServer
 {
-
+	//기능추가1
 	class Program
 	{
 		static void Main(string[] args)
@@ -31,12 +31,13 @@ namespace CameraServer
 					}
 				}
 			}
-
+			//기능추가2
 #if DEBUG
 			Console.WriteLine("Press Any Key to quit                                           ");
 			Console.ReadKey(false);
 #endif
 		}
+		//기능추가3
 		private static void init()
 		{
 			string version = Assembly.GetExecutingAssembly().GetName().Version.ToString();
@@ -49,6 +50,7 @@ namespace CameraServer
 
 			WindowUtils.SetCancelOnConsole();
 		}
+		//기능추가4
 		private static void make_camera_info_json()
 		{
 			CameraService.CreateCameraInfo();
