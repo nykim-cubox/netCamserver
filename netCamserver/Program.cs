@@ -64,7 +64,7 @@ namespace CameraServer
 		{
 			CameraService.MakeSampleImageAllDevices();
 		}
-
+		//브렌치 추가4
 		private static void usage()
 		{
 			Console.WriteLine("usage: CameraServer {device_index}");
