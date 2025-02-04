@@ -2,6 +2,7 @@
 using System.Runtime.InteropServices;
 //테스트
 //branch_test
+//추가2
 namespace CameraServer
 {
 
