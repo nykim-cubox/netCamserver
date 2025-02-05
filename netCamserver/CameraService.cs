@@ -189,7 +189,7 @@ namespace CameraServer
                 item.camera_name = cam.Value.Replace("@device_pnp_\\\\?\\", "").Replace("\\global", "");
 				item.width = 1280;
                 item.height = 720;
-                item.rotate = 270;
+                item.rotate = 0;
 
 				Console.WriteLine(string.Format("    ++++++++ camera[{0}]: {1}: {2}", item.camera_index, cam.Key, item.camera_name));
 				config.cameras.Add(item);
