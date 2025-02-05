@@ -1,7 +1,9 @@
 ﻿using System.Reflection;
 using System.Runtime.InteropServices;
+
 namespace CameraServer
 {
+
 	class Program
 	{
 		static void Main(string[] args)
@@ -30,11 +32,13 @@ namespace CameraServer
 					}
 				}
 			}
+
 #if DEBUG
 			Console.WriteLine("Press Any Key to quit                                           ");
 			Console.ReadKey(false);
 #endif
 		}
+
 		private static void init()
 		{
 			string version = Assembly.GetExecutingAssembly().GetName().Version.ToString();
@@ -47,6 +51,7 @@ namespace CameraServer
 
 			WindowUtils.SetCancelOnConsole();
 		}
+
 		private static void make_camera_info_json()
 		{
 			CameraService.CreateCameraInfo();
@@ -56,6 +61,7 @@ namespace CameraServer
 		{
 			CameraService.MakeSampleImageAllDevices();
 		}
+
 		private static void usage()
 		{
 			Console.WriteLine("usage: CameraServer {device_index}");
